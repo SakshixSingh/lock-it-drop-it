@@ -12,7 +12,6 @@
 - 💻 Dark-mode by default for your retinas’ sake
 - 🔐 Local storage = your stuff stays, even after refresh
 - 🗑️ Edit & delete like you’ve got your life together
-- 🌌 Animated stars & pastel blobs (yes, it’s a vibe)
 
 ---
 
