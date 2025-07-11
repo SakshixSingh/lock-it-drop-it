@@ -3,6 +3,15 @@ import { motion } from "framer-motion";
 import { Modal, Button, Form } from "react-bootstrap";
 import "./lockerroom.css";
 
+import { db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
+const getEmbedLink = (url) => {
+  const match = url.match(/(?:\?v=|\/embed\/|\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+};
+
 function LockerRoom() {
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -10,40 +19,51 @@ function LockerRoom() {
   const [newContent, setNewContent] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // Load saved items and apply dark mode
   useEffect(() => {
     document.body.classList.add("dark-mode");
-    const saved = localStorage.getItem("lockerCanvasItems");
-    if (saved) setItems(JSON.parse(saved));
-
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUser(user);
+        const userDoc = await getDoc(doc(db, "lockers", user.uid));
+        if (userDoc.exists()) {
+          setItems(userDoc.data().items || []);
+        }
+      }
+    });
     return () => {
       document.body.classList.remove("dark-mode");
+      unsubscribe();
     };
   }, []);
 
-  // Save items to localStorage on update
   useEffect(() => {
-    localStorage.setItem("lockerCanvasItems", JSON.stringify(items));
-  }, [items]);
+    if (user) {
+      setDoc(doc(db, "lockers", user.uid), { items });
+    }
+  }, [items, user]);
 
-  // Add or Update item
   const handleAddOrEditItem = (e) => {
     e.preventDefault();
     if (newContent.trim() === "") return;
+
+    const finalContent =
+      newType === "video" ? getEmbedLink(newContent) : newContent;
 
     if (isEditing && editIndex !== null) {
       const updatedItems = [...items];
       updatedItems[editIndex] = {
         ...updatedItems[editIndex],
         type: newType,
-        content: newContent,
+        content: finalContent,
       };
       setItems(updatedItems);
     } else {
       const newItem = {
         type: newType,
-        content: newContent,
+        content: finalContent,
         x: 100 + Math.random() * 300,
         y: 100 + Math.random() * 200,
       };
@@ -91,7 +111,6 @@ function LockerRoom() {
         </Button>
       </div>
 
-      {/* Locker Cards */}
       {items.map((item, index) => (
         <motion.div
           key={index}
@@ -146,7 +165,6 @@ function LockerRoom() {
         </motion.div>
       ))}
 
-      {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>{isEditing ? "Edit" : "Add"} Locker Item</Modal.Title>
@@ -174,7 +192,7 @@ function LockerRoom() {
                     ? "Write your note"
                     : newType === "link"
                     ? "Paste your link (https://...)"
-                    : "Paste YouTube embed link"
+                    : "Paste YouTube link (watch/embed/shorts)"
                 }
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}

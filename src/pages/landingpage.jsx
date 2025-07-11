@@ -1,14 +1,33 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { auth, provider } from "../firebase";
+import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
+
 import "./landing.css";
 
 function LandingPage() {
   const navigate = useNavigate();
 
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, provider);
+      navigate("/locker");
+    } catch (error) {
+      alert("Login failed: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) navigate("/locker");
+    });
+
+    return () => unsubscribe(); // Cleanup listener
+  }, [navigate]);
+
   return (
     <div className="landing-wrapper d-flex flex-column justify-content-center align-items-center vh-100 position-relative">
-
       {/* Background Text */}
       <div className="position-absolute w-100 h-100 z-0 opacity-10">
         {[...Array(60)].map((_, i) => (
@@ -53,9 +72,9 @@ function LandingPage() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         className="enter-btn btn mt-4 px-4 py-2 shadow z-1"
-        onClick={() => navigate("/locker")}
+        onClick={handleLogin}
       >
-        Enter Locker 🚀
+        Login with Google 🚀
       </motion.button>
     </div>
   );
