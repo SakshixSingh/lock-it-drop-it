@@ -23,7 +23,7 @@
 
 ## 🌐 Live Demo
 
-[lock-it-drop-it](https://lock-it-drop-it.netlify.app/locker)
+[lock-it-drop-it](https://lock-it-drop-it.netlify.app/)
 
 
 ---
