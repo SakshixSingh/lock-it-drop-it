@@ -21,6 +21,11 @@
 |----------|------------|---------------|----------------|
 | React    | Framer     | React-Bootstrap | localStorage 🧠 |
 
+## 🌐 Live Demo
+
+[lock-it-drop-it](lock-it-drop-it.netlify.app)
+
+
 ---
 
 ## 🚀 Getting Started
